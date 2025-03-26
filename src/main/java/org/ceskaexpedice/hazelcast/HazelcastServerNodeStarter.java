@@ -16,24 +16,35 @@
  */
 package org.ceskaexpedice.hazelcast;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
-/*
+
+/**
+ * Starts Hazelcast server from given configuration (env variables)
+ */
+/* TODO
 c:\tmp\t>java -cp ".;hazelcast-all-3.11.2.jar;hazelcast-locks-server-1.0-SNAPSHOT.jar" org.ceskaexpedice.hazelcast.HazelcastServerNodeStarter
  */
 public class HazelcastServerNodeStarter {
+    private static final String ENV_HAZELCAST_CONFIG_FILE = "HAZELCAST_CONFIG_FILE";
+    private static final String ENV_HAZELCAST_INSTANCE = "HAZELCAST_INSTANCE";
+    private static final String ENV_HAZELCAST_USER = "HAZELCAST_USER";
+
+    private static final String DEFAULT_HAZELCAST_CONFIG_FILE = null;
+    private static final String DEFAULT_HAZELCAST_INSTANCE = "akubrasync";
+    private static final String DEFAULT_HAZELCAST_USER = "dev";
 
     private static final Logger LOGGER = Logger.getLogger(HazelcastServerNodeStarter.class.getName());
     private static final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         startServer();
+        LOGGER.info("Hazelcast server node started successfully");
 
         // Register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down Hazelcast...");
+            LOGGER.info("Shutting down Hazelcast...");
             stopServer();
             shutdownLatch.countDown();
         }));
@@ -47,27 +58,25 @@ public class HazelcastServerNodeStarter {
     }
 
     public static void startServer() {
-        /*
-        File hazelcastConfigFile = KConfiguration.getInstance().findConfigFile("hazelcast.config");
-        String hazelcastConfigFileS = (hazelcastConfigFile != null && hazelcastConfigFile.exists()) ? hazelcastConfigFile.getAbsolutePath() : null;
-        String hazelcastInstance = KConfiguration.getInstance().getConfiguration().getString("hazelcast.instance");
-        String hazelcastUser = KConfiguration.getInstance().getConfiguration().getString("hazelcast.user");
-
-         */
-        File hazelcastConfigFile = null;
-        String hazelcastConfigFileS = (hazelcastConfigFile != null && hazelcastConfigFile.exists()) ? hazelcastConfigFile.getAbsolutePath() : null;
-        String hazelcastInstance = "akubrasync";
-        String hazelcastUser = "dev";
+        String hazelcastConfigFileS = getEnvOrDefault(ENV_HAZELCAST_CONFIG_FILE, DEFAULT_HAZELCAST_CONFIG_FILE);
+        String hazelcastInstance = getEnvOrDefault(ENV_HAZELCAST_INSTANCE, DEFAULT_HAZELCAST_INSTANCE);
+        String hazelcastUser = getEnvOrDefault(ENV_HAZELCAST_USER, DEFAULT_HAZELCAST_USER);
 
         HazelcastConfiguration hazelcastConfig = new HazelcastConfiguration.Builder()
                 .hazelcastConfigFile(hazelcastConfigFileS)
                 .hazelcastInstance(hazelcastInstance)
                 .hazelcastUser(hazelcastUser)
                 .build();
+
         HazelcastServerNode.ensureHazelcastNode(hazelcastConfig);
     }
 
     public static void stopServer() {
         HazelcastServerNode.shutdown();
+    }
+
+    private static String getEnvOrDefault(String envVar, String defaultValue) {
+        String value = System.getenv(envVar);
+        return (value != null && !value.isEmpty()) ? value : defaultValue;
     }
 }
