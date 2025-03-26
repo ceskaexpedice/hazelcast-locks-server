@@ -60,7 +60,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.hazelcast:hazelcast-all:3.11.2'
+    api 'com.hazelcast:hazelcast-all:3.11.2'
+    implementation 'net.jcip:jcip-annotations:1.0'
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0' // Replace with your test dependency
