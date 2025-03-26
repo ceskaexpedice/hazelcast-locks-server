@@ -44,7 +44,7 @@ public class HazelcastServerNodeStarter {
 
         // Register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOGGER.info("Shutting down Hazelcast...");
+            System.out.println("Shutting down Hazelcast..."); // do not use Logger here!
             stopServer();
             shutdownLatch.countDown();
         }));
