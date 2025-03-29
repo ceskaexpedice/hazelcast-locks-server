@@ -59,9 +59,6 @@ public class HazelcastClientNode {
      * @param configuration The configuration containing details such as the Hazelcast client config file and user credentials.
      */
     public void ensureHazelcastNode(HazelcastConfiguration configuration) {
-        if (hzInstance != null) {
-            return;
-        }
         ClientConfig config = createHazelcastConfig(configuration);
         hzInstance = HazelcastClient.newHazelcastClient(config);
     }

@@ -17,6 +17,7 @@
 package org.ceskaexpedice.hazelcast;
 
 import ca.thoughtwire.lock.DistributedLockService;
+import com.hazelcast.client.HazelcastClientNotActiveException;
 import org.ceskaexpedice.test.ConcurrencyUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
@@ -34,22 +36,35 @@ public class LocksTest {
 
     private static HazelcastClientNode hazelcastClientNode;
     private static DistributedLockService lockService;
+    private static HazelcastConfiguration hazelcastConfig;
 
     @BeforeAll
     static void beforeAll() {
-        HazelcastConfiguration hazelcastConfig = createHazelcastConfig();
+        hazelcastConfig = createHazelcastConfig();
         HazelcastServerNode.ensureHazelcastNode(hazelcastConfig);
 
         hazelcastClientNode = new HazelcastClientNode();
-        hazelcastClientNode.ensureHazelcastNode(hazelcastConfig);
-        lockService = DistributedLockService.newHazelcastLockService(hazelcastClientNode);
+        ensureHazelcastClientNode(hazelcastConfig);
     }
 
     @AfterAll
     static void afterAll() {
-        lockService.shutdown();
-        hazelcastClientNode.shutdown();
+        if (lockService != null) {
+            lockService.shutdown();
+            hazelcastClientNode.shutdown();
+        }
         HazelcastServerNode.shutdown();
+    }
+
+    @Test
+    void testSimpleLock() {
+        String result = doWithReadLock("1", new LockOperation<String>() {
+            @Override
+            public String execute() {
+                return "pepo";
+            }
+        });
+        assertEquals("pepo", result);
     }
 
     @Test
@@ -110,47 +125,50 @@ public class LocksTest {
         return hazelcastConfig;
     }
 
-    private Lock getWriteLock(String pid) {
-        if (pid == null) {
-            throw new IllegalArgumentException("pid cannot be null");
-        }
-        ReadWriteLock lock = lockService.getReentrantReadWriteLock(pid);
-        lock.writeLock().lock();
-        return lock.writeLock();
+    <T> T doWithReadLock(String pid, LockOperation<T> operation) {
+        return doWithLock(pid, operation, false);
     }
 
-    private Lock getReadLock(String pid) {
-        if (pid == null) {
-            throw new IllegalArgumentException("pid cannot be null");
-        }
-        ReadWriteLock lock = lockService.getReentrantReadWriteLock(pid);
-        lock.readLock().lock();
-        return lock.readLock();
+    <T> T doWithWriteLock(String pid, LockOperation<T> operation) {
+        return doWithLock(pid, operation, true);
     }
 
-    private <T> T doWithReadLock(String pid, LockOperation<T> operation) {
-        Lock readLock = getReadLock(pid);
+    private <T> T doWithLock(String pid, LockOperation<T> operation, boolean writeLock) {
         try {
-            return operation.execute();
-        } finally {
-            readLock.unlock();
+            ReadWriteLock readWriteLock = lockService.getReentrantReadWriteLock(pid);
+            Lock lock = writeLock ? readWriteLock.writeLock() : readWriteLock.readLock();
+            if (lock == null) {
+                throw new RuntimeException("Null lock acquired");
+            }
+            if (lock.tryLock(20, TimeUnit.SECONDS)) {
+                try {
+                    return operation.execute();
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                throw new RuntimeException("Lock timed out after sec:" + 20);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private <T> T doWithWriteLock(String pid, LockOperation<T> operation) {
-        Lock writeLock = getWriteLock(pid);
-        try {
-            return operation.execute();
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    private static void sleep(int millis){
+    private static void sleep(int millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void ensureHazelcastClientNode(HazelcastConfiguration hazelcastConfig) {
+        try {
+            hazelcastClientNode.ensureHazelcastNode(hazelcastConfig);
+            lockService = DistributedLockService.newHazelcastLockService(hazelcastClientNode);
+        } catch (Exception e) {
+            System.out.println("Hazelcast lock service could not be created:" + e.toString());
+            //throw new RuntimeException("UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", e);
         }
     }
 
