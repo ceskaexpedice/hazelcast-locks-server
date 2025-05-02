@@ -1,0 +1,76 @@
+name: Release new version of Hazelcast lock server 
+
+on:
+  workflow_dispatch:
+    inputs: 
+      tag_name:
+        description: 'Tag name for the release(1.0.XX)'
+        required: true
+      release_name:
+        description: 'Release name (Hazelcast  lock server version 1.0.XX)'
+        required: true
+    
+
+jobs:
+  build_jar:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # Prepare release      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        tag_name:  ${{ inputs.tag_name }}
+        release_name: ${{ inputs.release_name }}
+        body: |
+          Description of the release
+        draft: true
+        prerelease: false
+
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+    - name: Set execute permission for gradlew
+      run: chmod +x ./gradlew
+      env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+    - name: Build with Gradle
+      run: ./gradlew build publish
+      env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+    - name: List contents
+      run: |
+        ls build
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: akubra-1.0-SNAPSHOT.jar
+        path: build/libs
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        #GITHUB_TOKEN: ${{ secrets.PAT }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/libs/akubra-${{ inputs.tag_name }}.jar
+        asset_name: akubra-${{ inputs.tag_name }}.jar
+        asset_content_type: application/zip
