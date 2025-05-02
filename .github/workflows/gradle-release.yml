@@ -3,12 +3,6 @@ name: Release new version of Hazelcast lock server
 on:
   workflow_dispatch:
     inputs: 
-      tag_name:
-        description: 'Tag name for the release(1.0.XX)'
-        required: true
-      release_name:
-        description: 'Release name (Hazelcast  lock server version 1.0.XX)'
-        required: true
     
 
 jobs:
@@ -55,23 +49,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - name: List contents
-      run: |
-        ls build
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: akubra-1.0-SNAPSHOT.jar
-        path: build/libs
-
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        #GITHUB_TOKEN: ${{ secrets.PAT }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: build/libs/akubra-${{ inputs.tag_name }}.jar
-        asset_name: akubra-${{ inputs.tag_name }}.jar
-        asset_content_type: application/zip
