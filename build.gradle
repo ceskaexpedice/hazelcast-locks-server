@@ -2,6 +2,7 @@ plugins {
     id 'java-library' // Applies the Java plugin
     id 'maven-publish'
     id 'application'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 application {
@@ -77,22 +78,32 @@ test {
 build.doLast {
     println "Build outputs located in ${project.buildDir}"
 }
-/*
-task createManifest {
-    doLast {
-        jar {
-            manifest {
-                attributes(
-                        'Main-Class': 'org.ceskaexpedice.hazelcast.HazelcastServerNodeStarter',
-                        'Class-Path': configurations.runtimeClasspath.files.collect { "libs/${it.name}" }.join(' ')
-                )
+
+
+jib {
+    from {
+        image = 'eclipse-temurin:21-jre'
+    }
+    to {
+        image = 'hazelcast-lock-server'
+    }
+    container {
+        entrypoint = ["sh", "-c",
+                      "chmod +x /app/bin/hazelcast-locks-server && exec /app/bin/hazelcast-locks-server"
+        ]
+    }
+    extraDirectories {
+        paths {
+            path {
+                from = file('build/install/hazelcast-locks-server')  // nebo distributions, záleží jak to generuješ
+                into = '/app'
             }
         }
     }
 }
 
-jar {
-    dependsOn createManifest
+afterEvaluate {
+    tasks.matching { it.name.startsWith("jib") }.all {
+        it.dependsOn("installDist")
+    }
 }
-
- */
