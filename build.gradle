@@ -85,12 +85,13 @@ jib {
         image = 'eclipse-temurin:21-jre'
     }
     to {
-        image = 'hazelcast-lock-server'
+        image = 'hazelcast-locks-server'
     }
     container {
         entrypoint = ["sh", "-c",
                       "chmod +x /app/bin/hazelcast-locks-server && exec /app/bin/hazelcast-locks-server"
         ]
+        ports = ['5701']
     }
     extraDirectories {
         paths {
