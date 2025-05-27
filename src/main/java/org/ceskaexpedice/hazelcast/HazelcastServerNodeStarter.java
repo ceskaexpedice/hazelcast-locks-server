@@ -16,8 +16,13 @@
  */
 package org.ceskaexpedice.hazelcast;
 
+import com.hazelcast.nio.IOUtil;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -31,7 +36,7 @@ public class HazelcastServerNodeStarter {
     private static final String ENV_HAZELCAST_INSTANCE = "HAZELCAST_INSTANCE";
     private static final String ENV_HAZELCAST_USER = "HAZELCAST_USER";
 
-    private static final String DEFAULT_HAZELCAST_CONFIG_FILE = null;
+    private static final String DEFAULT_HAZELCAST_CONFIG_FILE = initDefaultConfiguration();
     private static final String DEFAULT_HAZELCAST_INSTANCE = "akubrasync";
     private static final String DEFAULT_HAZELCAST_USER = "dev";
 
@@ -58,6 +63,7 @@ public class HazelcastServerNodeStarter {
     }
 
     public static void startServer() {
+
         String hazelcastConfigFileS = getEnvOrDefault(ENV_HAZELCAST_CONFIG_FILE, DEFAULT_HAZELCAST_CONFIG_FILE);
         String hazelcastInstance = getEnvOrDefault(ENV_HAZELCAST_INSTANCE, DEFAULT_HAZELCAST_INSTANCE);
         String hazelcastUser = getEnvOrDefault(ENV_HAZELCAST_USER, DEFAULT_HAZELCAST_USER);
@@ -69,6 +75,18 @@ public class HazelcastServerNodeStarter {
                 .build();
 
         HazelcastServerNode.ensureHazelcastNode(hazelcastConfig);
+    }
+
+    static String initDefaultConfiguration()  {
+        try {
+            InputStream resourceAsStream = HazelcastServerNodeStarter.class.getClassLoader().getResourceAsStream("default-config.xml");
+            File defaultConfigFile = File.createTempFile("default", "config");
+            IOUtil.copy(resourceAsStream, defaultConfigFile);
+            return defaultConfigFile.getAbsolutePath();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(),e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static void stopServer() {

@@ -16,6 +16,10 @@
  */
 package org.ceskaexpedice.hazelcast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Represents the configuration settings for Hazelcast nodes (both server and client).
  * <p>
@@ -41,10 +45,14 @@ package org.ceskaexpedice.hazelcast;
  * @author pavels
  */
 public class HazelcastConfiguration {
+
     private final String hazelcastConfigFile;
     private final String hazelcastClientConfigFile;
     private final String hazelcastInstance;
     private final String hazelcastUser;
+
+    // File less configuration
+    private List<String> addresses = new ArrayList<>();
 
     /**
      * Private constructor to create a new HazelcastConfiguration instance using the Builder.
@@ -56,6 +64,7 @@ public class HazelcastConfiguration {
         this.hazelcastClientConfigFile = builder.hazelcastClientConfigFile;
         this.hazelcastInstance = builder.hazelcastInstance;
         this.hazelcastUser = builder.hazelcastUser;
+        this.addresses = builder.adresses;
     }
 
     /**
@@ -94,6 +103,19 @@ public class HazelcastConfiguration {
         return hazelcastUser;
     }
 
+
+    //===== File less configuration
+
+    /**
+     * Returns the explicitly defined list of Hazelcast server addresses
+     * that the client should connect to.
+     *
+     * @return list of Hazelcast server addresses (e.g. "localhost:5701").
+     */
+    public List<String> getAddresses() {
+        return addresses;
+    }
+
     /**
      * Builder class for constructing HazelcastConfiguration instances.
      * <p>
@@ -106,6 +128,8 @@ public class HazelcastConfiguration {
         private String hazelcastClientConfigFile;
         private String hazelcastInstance;
         private String hazelcastUser;
+
+        private List<String> adresses = new ArrayList<>();
 
         /**
          * Sets the path to the Hazelcast server configuration file.
@@ -148,6 +172,21 @@ public class HazelcastConfiguration {
          */
         public Builder hazelcastUser(String hazelcastUser) {
             this.hazelcastUser = hazelcastUser;
+            return this;
+        }
+
+        public Builder addHazelcastServer(String server) {
+            this.adresses.add(server);
+            return this;
+        }
+
+        public Builder removeHazelcastServer(String server) {
+            this.adresses.remove(server);
+            return this;
+        }
+
+        public Builder setHazelcastServers(String ... server) {
+            Arrays.stream(server).forEach(this.adresses::add);
             return this;
         }
 

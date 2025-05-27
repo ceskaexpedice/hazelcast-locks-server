@@ -85,6 +85,8 @@ public class HazelcastClientNode {
         } else {
             config = new ClientConfig();
             config.setInstanceName(configuration.getHazelcastInstance());
+            // adding addresses
+            configuration.getAddresses().forEach(config.getNetworkConfig()::addAddress);
             /* TODO the following config can be used for monitor thread
             config.setConnectionAttemptLimit(1);
             config.setConnectionAttemptPeriod(1000);
