@@ -85,7 +85,7 @@ jib {
         image = 'eclipse-temurin:21-jre'
     }
     to {
-        image = 'hazelcast-locks-server'
+        image = "ceskaexpedice/hazelcast-locks-server:${project.version}"
     }
     container {
         entrypoint = ["sh", "-c",
