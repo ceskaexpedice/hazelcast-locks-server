@@ -54,6 +54,19 @@ jobs:
         echo "Found TAR file: $TAR_FILE"
       id: find_tar
 
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name:  ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        body: |
+          Auto-generated release for version ${{ env.VERSION }}
+        draft: true
+        prerelease: false
+
 
     - name: Upload Release Asset
       id: upload-release-asset
@@ -67,18 +80,6 @@ jobs:
         asset_name: kramerius-core.zip
         asset_content_type: application/zip
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name:  ${{ env.TAG_NAME }}
-        release_name: ${{ env.RELEASE_NAME }}
-        body: |
-          Auto-generated release for version ${{ env.VERSION }}
-        draft: true
-        prerelease: false
 
     - name: Upload ZIP Release Asset
       uses: actions/upload-release-asset@v1
