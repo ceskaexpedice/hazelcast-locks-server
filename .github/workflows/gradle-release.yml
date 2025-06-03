@@ -40,19 +40,24 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
     - name: Find ZIP file in build/distributions directory
+      id: find_zip
       run: |
         ZIP_FILE=$(find build/distributions -name "*.zip" -type f -print -quit)
+        ZIP_NAME=$(basename "$ZIP_FILE")
         echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+        echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_OUTPUT"
         echo "Found ZIP file: $ZIP_FILE"
-      id: find_zip
 
     - name: Find TAR file in build/distributions directory
+      id: find_tar
       run: |
         TAR_FILE=$(find build/distributions -name "*.tar" -type f -print -quit)
-        echo "TAR_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+        TAR_NAME=$(basename "$TAR_FILE")
+        echo "TAR_FILE=$TAR_FILE" >> "$GITHUB_OUTPUT"
+        echo "TAR_NAME=$TAR_NAME" >> "$GITHUB_OUTPUT"
         echo "Found TAR file: $TAR_FILE"
-      id: find_tar
 
     - name: Create Release
       id: create_release
@@ -66,19 +71,6 @@ jobs:
           Auto-generated release for version ${{ env.VERSION }}
         draft: true
         prerelease: false
-
-
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        #GITHUB_TOKEN: ${{ secrets.PAT }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find_zip.outputs.ZIP_FILE }}
-        asset_name: kramerius-core.zip
-        asset_content_type: application/zip
 
 
     - name: Upload ZIP Release Asset
