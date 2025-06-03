@@ -35,7 +35,7 @@ jobs:
         echo "RELEASE_NAME=Release v$VERSION" >> $GITHUB_ENV   
 
     - name: Build with Gradle
-      run: ./gradlew build installDist
+      run: ./gradlew build publish installDist
       env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
