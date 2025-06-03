@@ -26,11 +26,78 @@ jobs:
       env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
+    - name: Get project version from Gradle
+      run: |
+        VERSION=$(./gradlew printVersion -q)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "TAG_NAME=v$VERSION" >> $GITHUB_ENV
+        echo "RELEASE_NAME=Release v$VERSION" >> $GITHUB_ENV   
+
     - name: Build with Gradle
-      run: ./gradlew build publish
+      run: ./gradlew build installDist
       env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Find ZIP file in build/distributions directory
+      run: |
+        ZIP_FILE=$(find build/distributions -name "*.zip" -type f -print -quit)
+        echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+        echo "Found ZIP file: $ZIP_FILE"
+      id: find_zip
+
+    - name: Find TAR file in build/distributions directory
+      run: |
+        TAR_FILE=$(find build/distributions -name "*.tar" -type f -print -quit)
+        echo "TAR_FILE=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+        echo "Found TAR file: $TAR_FILE"
+      id: find_tar
+
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        #GITHUB_TOKEN: ${{ secrets.PAT }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find_zip.outputs.ZIP_FILE }}
+        asset_name: kramerius-core.zip
+        asset_content_type: application/zip
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name:  ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        body: |
+          Auto-generated release for version ${{ env.VERSION }}
+        draft: true
+        prerelease: false
+
+    - name: Upload ZIP Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find_zip.outputs.ZIP_FILE }}
+        asset_name: ${{ steps.find_zip.outputs.ZIP_NAME }}
+        asset_content_type: application/zip
+
+    - name: Upload TAR Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find_tar.outputs.TAR_FILE }}
+        asset_name: ${{ steps.find_tar.outputs.TAR_NAME }}
+        asset_content_type: application/x-tar
 
 
