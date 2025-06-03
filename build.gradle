@@ -103,8 +103,16 @@ jib {
     }
 }
 
+task printVersion {
+    doLast {
+        println project.version
+    }
+}
+
+
 afterEvaluate {
     tasks.matching { it.name.startsWith("jib") }.all {
         it.dependsOn("installDist")
     }
 }
+
