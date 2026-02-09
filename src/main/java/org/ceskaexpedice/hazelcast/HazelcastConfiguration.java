@@ -50,6 +50,7 @@ public class HazelcastConfiguration {
     private final String hazelcastClientConfigFile;
     private final String hazelcastInstance;
     private final String hazelcastUser;
+    private final Long lockLeaseTimeSecs;
 
     // File less configuration
     private List<String> addresses = new ArrayList<>();
@@ -64,6 +65,7 @@ public class HazelcastConfiguration {
         this.hazelcastClientConfigFile = builder.hazelcastClientConfigFile;
         this.hazelcastInstance = builder.hazelcastInstance;
         this.hazelcastUser = builder.hazelcastUser;
+        this.lockLeaseTimeSecs = builder.locksLeaseTimeSecs;
         this.addresses = builder.adresses;
     }
 
@@ -103,6 +105,10 @@ public class HazelcastConfiguration {
         return hazelcastUser;
     }
 
+    public Long getLockLeaseTimeSecs() {
+        return lockLeaseTimeSecs;
+    }
+
 
     //===== File less configuration
 
@@ -128,6 +134,7 @@ public class HazelcastConfiguration {
         private String hazelcastClientConfigFile;
         private String hazelcastInstance;
         private String hazelcastUser;
+        private Long locksLeaseTimeSecs;
 
         private List<String> adresses = new ArrayList<>();
 
@@ -172,6 +179,11 @@ public class HazelcastConfiguration {
          */
         public Builder hazelcastUser(String hazelcastUser) {
             this.hazelcastUser = hazelcastUser;
+            return this;
+        }
+
+        public Builder locksLeaseTimeSecs(Long locksLeaseTimeSecs) {
+            this.locksLeaseTimeSecs = locksLeaseTimeSecs;
             return this;
         }
 

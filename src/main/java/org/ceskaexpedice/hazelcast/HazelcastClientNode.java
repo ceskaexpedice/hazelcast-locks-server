@@ -73,7 +73,7 @@ public class HazelcastClientNode {
      * @param configuration The configuration containing details such as the config file path and user credentials.
      * @return The Hazelcast client configuration object.
      */
-    private ClientConfig createHazelcastConfig(HazelcastConfiguration configuration) {
+    public ClientConfig createHazelcastConfig(HazelcastConfiguration configuration) {
         ClientConfig config = null;
         File configFile = configuration.getHazelcastClientConfigFile() == null ? null : new File(configuration.getHazelcastClientConfigFile());
         if (configFile != null) {
