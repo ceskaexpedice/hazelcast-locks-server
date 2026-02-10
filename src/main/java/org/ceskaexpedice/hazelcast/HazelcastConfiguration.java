@@ -45,12 +45,15 @@ import java.util.List;
  * @author pavels
  */
 public class HazelcastConfiguration {
+    private static final long WAIT_TIME_DEFAULT = 120;
+    private static final long LEASE_TIME_DEFAULT = 120;
 
     private final String hazelcastConfigFile;
     private final String hazelcastClientConfigFile;
     private final String hazelcastInstance;
     private final String hazelcastUser;
-    private final Long lockLeaseTimeSecs;
+    private final Long waitTimeSecs;
+    private final Long leaseTimeSecs;
 
     // File less configuration
     private List<String> addresses = new ArrayList<>();
@@ -65,7 +68,8 @@ public class HazelcastConfiguration {
         this.hazelcastClientConfigFile = builder.hazelcastClientConfigFile;
         this.hazelcastInstance = builder.hazelcastInstance;
         this.hazelcastUser = builder.hazelcastUser;
-        this.lockLeaseTimeSecs = builder.locksLeaseTimeSecs;
+        this.waitTimeSecs = builder.waitTimeSecs;
+        this.leaseTimeSecs = builder.leaseTimeSecs;
         this.addresses = builder.adresses;
     }
 
@@ -105,8 +109,20 @@ public class HazelcastConfiguration {
         return hazelcastUser;
     }
 
-    public Long getLockLeaseTimeSecs() {
-        return lockLeaseTimeSecs;
+    public Long getLeaseTimeSecs() {
+        if(leaseTimeSecs == null) {
+            return LEASE_TIME_DEFAULT;
+        }else{
+            return leaseTimeSecs;
+        }
+    }
+
+    public Long getWaitTimeSecs() {
+        if(waitTimeSecs == null) {
+            return WAIT_TIME_DEFAULT;
+        }else{
+            return waitTimeSecs;
+        }
     }
 
 
@@ -134,7 +150,8 @@ public class HazelcastConfiguration {
         private String hazelcastClientConfigFile;
         private String hazelcastInstance;
         private String hazelcastUser;
-        private Long locksLeaseTimeSecs;
+        private Long waitTimeSecs;
+        private Long leaseTimeSecs;
 
         private List<String> adresses = new ArrayList<>();
 
@@ -182,8 +199,13 @@ public class HazelcastConfiguration {
             return this;
         }
 
-        public Builder locksLeaseTimeSecs(Long locksLeaseTimeSecs) {
-            this.locksLeaseTimeSecs = locksLeaseTimeSecs;
+        public Builder leaseTimeSecs(Long leaseTimeSecs) {
+            this.leaseTimeSecs = leaseTimeSecs;
+            return this;
+        }
+
+        public Builder waitTimeSecs(Long waitTimeSecs) {
+            this.waitTimeSecs = waitTimeSecs;
             return this;
         }
 

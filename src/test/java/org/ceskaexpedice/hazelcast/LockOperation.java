@@ -17,6 +17,8 @@
 
 package org.ceskaexpedice.hazelcast;
 
+import java.util.concurrent.TimeoutException;
+
 /**
  * Represents an operation that should be executed within a lock.
  * <p>
@@ -38,7 +40,7 @@ public interface LockOperation<T> {
      *
      * @return The result of the operation.
      */
-    T execute();
+    T execute() throws TimeoutException;
 
 }
 
